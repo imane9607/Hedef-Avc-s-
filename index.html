@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hedef Avcısı</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+
+    body {
+      background-image: url('A1.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .game-container {
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      color: #333;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      max-width: 800px;
+      width: 100%;
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-gap: 10px;
+      margin-top: 20px;
+    }
+
+    .square {
+      border: 2px solid #333;
+      border-radius: 5px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-bottom: 100%;
+      height: 0;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .btn {
+      margin: 0 5px;
+      font-size: 14px;
+      padding: 10px 16px;
+    }
+
+    .score-time {
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .score-time span {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0 10px;
+    }
+
+    .game-description {
+      background-color: #ff6f00;
+      color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      font-size: 18px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    .game-description::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 10px;
+      border-style: solid;
+      border-color: transparent transparent #ff6f00 transparent;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Hedef Avcısı</h1>
+    <p class="game-description">
+      Merhaba! Bu oyunda yapman gereken, ekranda beliren hedeflere tıklayarak puan toplamak. Ne kadar hızlı ve isabetli olursan o kadar yüksek puan kazanırsın. Başlat butonuna tıklayarak oyuna başlayabilir, Duraklat butonuyla da istediğin zaman mola verebilirsin. Hadi, hedeflerini vurma zamanı geldi!
+    </p>
+    <div class="d-flex justify-content-center mb-3">
+      <button class="btn btn-success" id="start-button">Başlat</button>
+      <button class="btn btn-warning" id="pause-button" disabled>Duraklat</button>
+      <!-- Skor ve süre göstergeleri -->
+      <div class="score-time">
+        <span id="score-display">Skor: 0</span>
+        <span id="time-display">Süre: 30</span>
+      </div>
+    </div>
+    <!-- Oyun tahtası ve hedef kareleri -->
+    <div class="game-board">
+      <div class="square"><canvas id="canvas-1"></canvas></div>
+      <div class="square"><canvas id="canvas-2"></canvas></div>
+      <div class="square"><canvas id="canvas-3"></canvas></div>
+      <div class="square"><canvas id="canvas-4"></canvas></div>
+      <div class="square"><canvas id="canvas-5"></canvas></div>
+      <div class="square"><canvas id="canvas-6"></canvas></div>
+    </div>
+  </div>
+  <script>
+    // Oyun değişkenlerini tanımla
+const canvases = document.querySelectorAll('canvas');
+const targets = [];
+let score = 0;
+let timeLeft = 30;
+let gameInterval;
+let targetInterval;
+let isPaused = false;
+let isGameStarted = false;
+let level = 1;
+let ballSize = 75;
+let ballInterval = 1250;
+
+// Hedefleri çizmek için fonksiyon
+function drawTarget(canvas, targetX, targetY, targetRadius, color) {
+  const ctx = canvas.getContext('2d');
+  ctx.beginPath();
+  ctx.arc(targetX, targetY, targetRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+// Hedefleri rastgele konumlandırmak için fonksiyon
+function updateTargets() {
+  canvases.forEach((canvas, index) => {
+    const targetX = canvas.width * Math.random();
+    const targetY = canvas.height * Math.random();
+    targets[index] = { x: targetX, y: targetY, radius: ballSize / 2 };
+    drawTarget(canvas, targetX, targetY, ballSize / 2, 'red');
+  });
+}
+
+// Canvas'ları temizlemek için fonksiyon
+function clearCanvas(canvas) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// Hedeflere tıklanma olayını yönetmek için fonksiyon
+function clickHandler(event) {
+  const targetCanvas = event.target;
+  const canvasIndex = Array.from(canvases).indexOf(targetCanvas);
+  const target = targets[canvasIndex];
+  const rect = targetCanvas.getBoundingClientRect();
+  const clickX = event.clientX - rect.left;
+  const clickY = event.clientY - rect.top;
+  const distance = Math.sqrt(Math.pow(clickX - target.x, 2) + Math.pow(clickY - target.y, 2));
+  if (distance <= target.radius) {
+    score++;
+    clearCanvas(targetCanvas);
+    updateScoreDisplay();
+  }
+}
+
+// Oyunu başlatmak için fonksiyon
+function startGame() {
+  isGameStarted = true;
+  const pauseButton = document.getElementById('pause-button');
+  pauseButton.disabled = false;
+  canvases.forEach(canvas => {
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    canvas.addEventListener('click', clickHandler);
+  });
+  updateTargets();
+  targetInterval = setInterval(() => {
+    canvases.forEach(clearCanvas);
+    updateTargets();
+  }, ballInterval);
+  gameInterval = setInterval(() => {
+    if (!isPaused) {
+      timeLeft--;
+      updateTimeDisplay();
+      if (timeLeft === 0) {
+        clearInterval(gameInterval);
+        clearInterval(targetInterval);
+        alert(`Oyun bitti! Skorun: ${score}. Tebrikler, harika bir performans gösterdin!`);
+        isGameStarted = false;
+        pauseButton.disabled = true;
+      }
+    }
+  }, 1000);
+}
+
+// Oyunu duraklatmak veya devam ettirmek için fonksiyon
+function pauseGame() {
+  if (isGameStarted) {
+    isPaused = !isPaused;
+    const pauseButton = document.getElementById('pause-button');
+    pauseButton.textContent = isPaused ? 'Devam Et' : 'Duraklat';
+    if (isPaused) {
+      clearInterval(targetInterval);
+    } else {
+      targetInterval = setInterval(() => {
+        canvases.forEach(clearCanvas);
+        updateTargets();
+      }, ballInterval);
+    }
+  }
+}
+
+// Skor göstergesini güncellemek için fonksiyon
+function updateScoreDisplay() {
+  const scoreDisplay = document.getElementById('score-display');
+  scoreDisplay.textContent = `Skor: ${score}`;
+}
+
+// Süre göstergesini güncellemek için fonksiyon
+function updateTimeDisplay() {
+  const timeDisplay = document.getElementById('time-display');
+  timeDisplay.textContent = `Süre: ${timeLeft}`;
+}
+
+// Sayfa yüklendiğinde skor ve süre göstergelerini güncelle
+window.addEventListener('load', () => {
+  updateScoreDisplay();
+  updateTimeDisplay();
+});
+
+// Başlat butonuna tıklandığında oyunu başlat
+const startButton = document.getElementById('start-button');
+startButton.addEventListener('click', startGame);
+
+// Duraklat butonuna tıklandığında oyunu duraklat veya devam ettir
+const pauseButton = document.getElementById('pause-button');
+pauseButton.addEventListener('click', pauseGame);
+  </script>
+</body>
+</html>
