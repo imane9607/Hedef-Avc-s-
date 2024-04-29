@@ -6,4 +6,4 @@ Ancak dikkatli olun, zamanınız sınırlı! Hedefleri vurmak için yalnızca 30
 Hedef Avcısı, hem eğlenceli hem de zorlu bir deneyim sunar. El-göz koordinasyonunuzu ve reflekslerinizi test ederken, aynı zamanda odaklanma ve konsantrasyon becerilerinizi de geliştirir. Kendinize meydan okuyun ve rekor kırmaya çalışın!
 Basit ama bağımlılık yaratan bu oyunla, boş zamanlarınızda hem eğlenecek hem de becerilerinizi geliştireceksiniz. Hadi, hedefleri avlamaya başlayın ve en yüksek skoru elde etmek için yarışın!
 Oyun linki: http://hadefavcisi.site/
-YouTube'da nasıl oynanacağını açıklayın: https://www.youtube.com/watch?v=zY%5C_MKSU%5C_r5M&feature=shared
+YouTube'da nasıl oynanacağını açıklayın: [https://www.youtube.com/watch?v=zY%5C_MKSU%5C_r5M&feature=shared](https://youtu.be/Q25XEqwABU8?si=hkv3nCJddCgdHy0z)
